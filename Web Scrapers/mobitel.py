@@ -1,7 +1,8 @@
 import scraper
 from bs4 import BeautifulSoup
 
-soup = scraper.scrape("https://www.mobitel.lk/broadband/plans-and-rates-prepaid")
+url = "https://www.mobitel.lk/broadband/plans-and-rates-prepaid"
+soup = scraper.scrape(url)
 
 plans_section = soup.find('div', class_='page_tabing_title_area')
 if plans_section is None:
