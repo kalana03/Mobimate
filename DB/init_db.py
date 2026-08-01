@@ -17,6 +17,7 @@ def init_db():
         anytime_data_gb INTEGER DEFAULT 0,
         voice_mins INTEGER DEFAULT 0,
         sms_count INTEGER DEFAULT 0,
+        is_data_rollover BOOLEAN DEFAULT 0,
         is_active INTEGER DEFAULT 1
     );
     """)
