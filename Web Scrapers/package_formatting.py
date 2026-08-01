@@ -2,9 +2,9 @@ import json
 import os
 import re
 from openai import OpenAI
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 client = OpenAI(
     api_key=os.environ.get("GROQ_API_KEY"),
@@ -12,7 +12,7 @@ client = OpenAI(
 )
 
 PROMPT_TEMPLATE = """You are a data extraction engine for Sri Lankan telecom mobile data packages.
-Below is table data scraped from Mobitel's prepaid broadband page under the Tab Name: "{tab_name}".
+Below is scraped content (HTML table data or tariff prose) from Mobitel's prepaid broadband page under the Tab Name: "{tab_name}".
 
 Analyze the table intelligently and extract every distinct package into JSON.
 

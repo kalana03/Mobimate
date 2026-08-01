@@ -31,9 +31,9 @@ class PackageIn(BaseModel):
     package_name: str
     price: float
     validity_days: int
-    fup_gb: int = 0
+    fup_gb: float = 0
     is_fup_per_day: bool = False
-    anytime_data_gb: int = 0
+    anytime_data_gb: float = 0
     voice_mins: int = 0
     sms_count: int = 0
     is_data_rollover: bool = False

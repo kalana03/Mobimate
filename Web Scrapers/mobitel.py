@@ -36,17 +36,17 @@ for i, plan in enumerate(plans, start=1):
     else:
         table = body.find('table')
         
-    if table is None:
-        continue
-
-    # 🧹 Convert table HTML tags into clean, human-readable text
-    rows = []
-    for tr in table.find_all('tr'):
-        cells = [td.get_text(strip=True) for td in tr.find_all(['td', 'th'])]
-        if cells:
-            rows.append(" | ".join(cells))
-    
-    table_text = "\n".join(rows)
+    if table is not None:
+        # 🧹 Convert table HTML tags into clean, human-readable text
+        rows = []
+        for tr in table.find_all('tr'):
+            cells = [td.get_text(strip=True) for td in tr.find_all(['td', 'th'])]
+            if cells:
+                rows.append(" | ".join(cells))
+        table_text = "\n".join(rows)
+    else:
+        # Prose-based tabs (e.g. MOBITEL 1278) have no <table>; use full body text
+        table_text = body.get_text("\n", strip=True)
 
     if not table_text.strip():
         continue
