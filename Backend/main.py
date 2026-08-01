@@ -44,6 +44,12 @@ class PackageAppIn(BaseModel):
     package_id: int
     app_id: int
 
+
+class AppIn(BaseModel):
+    app_name: str
+    app_icon_url: str | None = None
+
+
 @app.get("/packages/{carrier}")
 def get_package_list(carrier: str, db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     query = select(models.Package).where(
@@ -53,6 +59,11 @@ def get_package_list(carrier: str, db: Session = Depends(get_db)) -> List[Dict[s
     result = db.execute(query)
     return [package_to_dict(pkg) for pkg in result.scalars()]
 
+@app.get("/apps/")
+def get_package_list(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    query = select(models.App)
+    result = db.execute(query)
+    return [app_to_dict(app) for app in result.scalars()]
 
 @app.post("/insert-packages/")
 def insert_packages(packages: List[PackageIn], db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
@@ -117,3 +128,39 @@ def insert_package_apps(links: List[PackageAppIn], db: Session = Depends(get_db)
 
     db.commit()
     return {"inserted": inserted, "count": len(inserted)}
+
+
+@app.get("/apps")
+def get_apps(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    result = db.execute(select(models.App))
+    return [
+        {
+            "app_id": app.app_id,
+            "app_name": app.app_name,
+            "app_icon_url": app.app_icon_url,
+        }
+        for app in result.scalars()
+    ]
+
+
+@app.post("/insert-apps/")
+def insert_apps(apps: List[AppIn], db: Session = Depends(get_db)) -> Dict[str, Any]:
+    inserted = []
+    skipped = []
+
+    for app_in in apps:
+        existing = db.execute(
+            select(models.App).where(models.App.app_name == app_in.app_name)
+        ).scalars().first()
+
+        if existing:
+            skipped.append({"app_name": existing.app_name, "app_id": existing.app_id})
+            continue
+
+        app = models.App(app_name=app_in.app_name, app_icon_url=app_in.app_icon_url)
+        db.add(app)
+        db.flush()
+        inserted.append({"app_name": app.app_name, "app_id": app.app_id})
+
+    db.commit()
+    return {"inserted": inserted, "skipped": skipped, "inserted_count": len(inserted)}

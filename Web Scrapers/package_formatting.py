@@ -12,7 +12,7 @@ client = OpenAI(
 )
 
 PROMPT_TEMPLATE = """You are a data extraction engine for Sri Lankan telecom mobile data packages.
-Below is scraped content (HTML table data or tariff prose) from Mobitel's prepaid broadband page under the Tab Name: "{tab_name}".
+Below is scraped content (HTML table data or tariff prose) from the "{carrier}" carrier's prepaid broadband page under the Tab Name: "{tab_name}".
 
 Analyze the table intelligently and extract every distinct package into JSON.
 
@@ -20,7 +20,7 @@ Output shape (ONLY this JSON format):
 {{
   "packages": [
     {{
-      "carrier": "Mobitel",
+      "carrier": "{carrier}",
       "package_name": "...",
       "price": 0.0,
       "validity_days": 0,
@@ -42,20 +42,31 @@ NAMING RULES FOR 'package_name':
   * Example: Tab Name = "Social Combo", Column = "30 Days Package" -> package_name = "Social Combo 30 Days"
   * Example: Tab Name = "NONSTOP TIKTOK", Column = "7 Day Pack" -> package_name = "NONSTOP TIKTOK 7 Days"
   * Example: Tab Name = "MOBITEL 1598", Single Plan -> package_name = "MOBITEL 1598"
-- ALWAYS set "carrier": "Mobitel".
+  * Example: Tab Name = "MOBITEL 1278 & 368", "Mobitel 1278" is one package and "Mobitel 368" is another package
+- ALWAYS set "carrier" to the actual carrier name: "{carrier}".
+
+ALLOWED APPS: {apps}
+
+Rules:
+- "app_names" should use the exact app names from the ALLOWED APPS list above wherever possible. Do NOT invent, paraphrase, or abbreviate app names; use the exact names as written.
+- If a bonus app mentioned in the content is NOT in the ALLOWED APPS list, you MAY still include it, using the exact name as written in the content.
+
 
 Rules:
 - Parse prices, validity, GB allowances, voice minutes, and SMS counts from the text.
 - If a value is absent, use defaults (0, false).
 - Output ONLY valid JSON object.
+- Some sections could contain more than one package, in those instances, intelligently seperate them to 2 different packages
+- can have duplicates of the same package throughout the body, be mindful.
 
 TAB NAME: {tab_name}
+CARRIER: {carrier}
 TABLE CONTENT:
 {body}
 """
 
-def format_packages(body_text: str, tab_name: str) -> dict:
-    prompt = PROMPT_TEMPLATE.format(tab_name=tab_name, body=str(body_text))
+def format_packages(body_text: str, tab_name: str, carrier: str, apps_list: list) -> dict:
+    prompt = PROMPT_TEMPLATE.format(tab_name=tab_name, carrier=carrier, apps=", ".join(app["app_name"] for app in apps_list), body=str(body_text))
 
     try:
         response = client.chat.completions.create(
